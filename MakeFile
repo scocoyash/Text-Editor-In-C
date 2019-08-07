@@ -1,0 +1,2 @@
+stex : stex.c
+	$(CC) stex.c -o stex -Wall -Wextra -pedantic -std=C99

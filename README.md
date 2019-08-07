@@ -1,2 +1,2 @@
 # Text-Editor-In-C
-A basic text editor app in C99 Language
+A basic Text editor in C99 Language
