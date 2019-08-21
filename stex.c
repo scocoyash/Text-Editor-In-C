@@ -1,10 +1,12 @@
 /*** includes ***/
 #include<ctype.h>
 #include<stdio.h>
-#include <errno.h>
+#include<errno.h>
 #include<termios.h>
 #include<unistd.h>
 #include<stdlib.h>
+
+#define CTRL_KEY(k) ((k) & 0x1F)
 
 /*** data structures ***/
 
@@ -15,6 +17,15 @@
 struct termios original_termios;
 
 /*** terminal ***/
+
+int keyRead(){
+  int nread;
+  char c;
+  while ((nread = read(STDIN_FILENO, &c, 1)) != 1) {
+    if (nread == -1 && errno != EAGAIN) die("read");
+  }
+  return c;
+}
 
 /* error logging function */
 void die(const char *s) {
@@ -50,20 +61,26 @@ void enterRawMode(){
 	if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) die("tcsetattr");
 }
 
+/**** input ***/
+
+void editorKeyPress(){
+	char c = keyRead();
+	switch(c){
+		case CTRL_KEY('q'):
+      	exit(0);
+      	break;
+	}
+	return;
+}
+
 /*** init ***/
 
 int main(){
 	enterRawMode();
 	
 	while (1) {
-    	char c = '\0';
-		if (read(STDIN_FILENO, &c, 1) == -1 && errno != EAGAIN) die("read");		
-		if (iscntrl(c)) {
-     	  printf("%d\n", c);
-    	} else {
-      	  printf("%d ('%c')\r\n", c, c);
-    	}
-		if (c == 'q') break;
+    	editorKeyPress();
 	}
+	
 	return 0;
 }
