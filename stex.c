@@ -24,6 +24,8 @@ int keyRead(){
   while ((nread = read(STDIN_FILENO, &c, 1)) != 1) {
     if (nread == -1 && errno != EAGAIN) die("read");
   }
+
+  //TODO : handle escape sequences
   return c;
 }
 
@@ -61,7 +63,7 @@ void enterRawMode(){
 	if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) die("tcsetattr");
 }
 
-/**** input ***/
+/*** input ***/
 
 void editorKeyPress(){
 	char c = keyRead();
@@ -70,7 +72,15 @@ void editorKeyPress(){
       	exit(0);
       	break;
 	}
+
+	//TODO : handle Ctrl key sequences
 	return;
+}
+
+/*** output ***/
+
+void editorRefreshScreen() {
+  write(STDOUT_FILENO, "\x1b[2J", 4);
 }
 
 /*** init ***/
@@ -79,6 +89,7 @@ int main(){
 	enterRawMode();
 	
 	while (1) {
+		editorRefreshScreen();
     	editorKeyPress();
 	}
 	

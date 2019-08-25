@@ -35,3 +35,8 @@ A basic Text editor in C99 Language
     * exit() [stdlib.h] - exit the program with an exit status of 1
 
 
+### Step 2 - Enhancing the input and output
+***
+
+* Adding refresh screen everytime the input is received
+
