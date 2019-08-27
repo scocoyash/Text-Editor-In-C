@@ -1,7 +1,26 @@
 # Text-Editor-In-C
 A basic Text editor in C99 Language
 
-## Notes :
+## **Running the code**
+***
+
+* Install c99(or higher) compiler; on Linux, check by executing ``` cc --version``` command on terminal
+* Install cmake to build files using MakeFile; on Linux, check by executing ``` make -v ``` command on terminal
+* Then run the following code snippet in the same directory where you unzipped this repo:
+
+Without Make:
+```
+cc stex.c -o stex
+./stex
+```
+
+With Make:
+```
+make stex
+./stex
+```
+
+## **Notes** :
 
 ### Step 1 - Conversion from Canonical Mode to Raw Mode
 ***
@@ -38,5 +57,14 @@ A basic Text editor in C99 Language
 ### Step 2 - Enhancing the input and output
 ***
 
-* Adding refresh screen everytime the input is received
+* Adding refresh screen everytime the input is received; do not forget to clear the screen and reposition the cursor on Ctrl+Q press
+    * *editorRefreshScreen()* - 
+    writes 4 bytes to the output screen;
+        * **\x1b** - decimal 27 is the escape character,
+        * [ - start of the escape sequence
+        * 2J - clears the entire screen
+        * H - repositions the cursor to the top of the screen
+    
+    
+    
 
