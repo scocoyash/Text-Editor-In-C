@@ -3,6 +3,7 @@
 #include<stdio.h>
 #include<errno.h>
 #include<termios.h>
+#include<sys/ioctl.h>
 #include<unistd.h>
 #include<stdlib.h>
 
@@ -10,11 +11,14 @@
 
 /*** data structures ***/
 
-/** @param 
-	original_terminos
-	stores original terminal attributes
-*/
-struct termios original_termios;
+struct editorConfiguration {
+	int screencols;
+	int screenrows;
+	/* stores original terminal attributes	*/
+	struct termios original_termios;
+};
+
+struct editorConfiguration E;
 
 /*** terminal ***/
 
@@ -39,15 +43,15 @@ void die(const char *s) {
 
 void exitRawMode(){
 	/* leave the terminal attributes as they were when exiting */
-	if(tcsetattr(STDIN_FILENO, TCSAFLUSH, &original_termios) == -1) die("tcsetattr");
+	if(tcsetattr(STDIN_FILENO, TCSAFLUSH, &E.original_termios) == -1) die("tcsetattr");
 }
 
 void enterRawMode(){
-	if (tcgetattr(STDIN_FILENO, &original_termios) == -1) die("tcgetattr");
+	if (tcgetattr(STDIN_FILENO, &E.original_termios) == -1) die("tcgetattr");
 	/* whenever exiting the program, restore terminal attribute states */
 	atexit(exitRawMode);
 
-	struct termios raw = original_termios;
+	struct termios raw = E.original_termios;
 	// flag - IXON turns ctrl+s && ctrl+q software signals off
 	// flag - ICRNL turns ctrl+m carriage return off
 	raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
@@ -63,6 +67,17 @@ void enterRawMode(){
   	raw.c_cc[VTIME] = 1;
 
 	if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) die("tcsetattr");
+}
+
+int getWindowSize(int *rows, int *cols){
+	struct winsize ws;
+	if(ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0){
+		return -1;
+	}else{
+		*cols = ws.ws_col;
+		*rows = ws.ws_row;
+		return 0;
+	}
 }
 
 /*** input ***/
@@ -90,8 +105,13 @@ void editorRefreshScreen() {
 
 /*** init ***/
 
+void initEditor() {
+  if (getWindowSize(&E.screenrows, &E.screencols) == -1) die("getWindowSize");
+}
+
 int main(){
 	enterRawMode();
+	initEditor();
 	
 	while (1) {
 		editorRefreshScreen();

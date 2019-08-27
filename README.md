@@ -65,6 +65,8 @@ make stex
         * 2J - clears the entire screen
         * H - repositions the cursor to the top of the screen
     
-    
+* Getting to know the size of the terminal - using the **ioctl** library
+
+    * *getWindowSize()* - using the ioctl function, we check whether the winsize struct is present or not. If absent, we return -1. **TIOCGWINSZ** stands for Terminal IOCtl (which itself stands for Input/Output Control) Get WINdow SiZe.)
     
 
