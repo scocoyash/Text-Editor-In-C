@@ -68,5 +68,17 @@ make stex
 * Getting to know the size of the terminal - using the **ioctl** library
 
     * *getWindowSize()* - using the ioctl function, we check whether the winsize struct is present or not. If absent, we return -1. **TIOCGWINSZ** stands for Terminal IOCtl (which itself stands for Input/Output Control) Get WINdow SiZe.)
+
+* ioctl() isn’t guaranteed to be able to request the window size on all systems, so providing a fallback method of getting the window size using the cursor positon - *getCursorPosition()*.
+
+* Drawing '~' like VIM at the start of each row
+    * *editorDrawRows()* - prints '~' at the start of each row
+
+* Creating **Dynamic Strings** in C to write the buffer to the screen at once for performance enhancements.
+Replacing all our **write()** calls with code that appends the string to a buffer, and then **write()** this buffer out at the end.
+    * Creating a **buffer abuf{}** consisting of a pointer to our buffer in memory, and a length.
+    * *abAppend()* - appends a string to a buffer
+    * *abFree()* - frees the memory occupied by the buffer
+
     
 
