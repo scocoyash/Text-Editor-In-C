@@ -82,6 +82,12 @@ Replacing all our **write()** calls with code that appends the string to a buffe
 
 * For performance improvements, we can just clear the right part of the cursor when drawing the row instead of clearing the screen everytime when we refresh the screen.
     * remove ~~abAppend(&ab, "\x1b[2J", 4)~~ from editor refresh screen for the above said reason.
-    
-    
 
+### Step 3 - Focusing on input
+***
+
+* Get the cursor position : store the x and y co-ordinates of the cursor postion in the editorConfiguration struct.
+    * E.cx is the horizontal coordinate of the cursor (the column) and E.cy is the vertical coordinate (the row). Initialize both of them to 0, as we want the cursor to start at the top-left of the screen
+
+* Move the cursor to the x and y co-ordinates of the screen in the editor-refresh screen.
+    * using **snprintf()** function from [stdlib.h]which formats and stores a series of characters and values in the array buffer
