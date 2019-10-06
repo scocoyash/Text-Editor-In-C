@@ -80,5 +80,8 @@ Replacing all our **write()** calls with code that appends the string to a buffe
     * *abAppend()* - appends a string to a buffer
     * *abFree()* - frees the memory occupied by the buffer
 
+* For performance improvements, we can just clear the right part of the cursor when drawing the row instead of clearing the screen everytime when we refresh the screen.
+    * remove ~~abAppend(&ab, "\x1b[2J", 4)~~ from editor refresh screen for the above said reason.
+    
     
 
