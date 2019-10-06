@@ -94,3 +94,16 @@ Replacing all our **write()** calls with code that appends the string to a buffe
 
 
 * Handle Arrow key escape sequences and change the position of the cursor on arrow key press
+
+* Handle HOME_KEY, END_KEY, PAGE_UP, PAGE_DOWN AND DEL KEYS support along with their escape sequence handling. Following are escape sequences for some keys :
+    * *'\x1b'* - Escape sequence starts  
+        *   [A - ArrowUp
+        *   [B - ArrowDown
+        *   [C - ArrowRight
+        *   [D - ArrowLeft
+        *   [5~ - PageUp
+        *   [6~ - PageDown
+        *   [1~ , [7~ , [H , [OH - Home
+        *   [4~ , [8~ , [F , [OF - End
+        *   [3~ - Del
+        * [You can find more escape sequences here :D](http://ascii-table.com/ansi-escape-sequences.php)
