@@ -90,4 +90,7 @@ Replacing all our **write()** calls with code that appends the string to a buffe
     * E.cx is the horizontal coordinate of the cursor (the column) and E.cy is the vertical coordinate (the row). Initialize both of them to 0, as we want the cursor to start at the top-left of the screen
 
 * Move the cursor to the x and y co-ordinates of the screen in the editor-refresh screen.
-    * using **snprintf()** function from [stdlib.h]which formats and stores a series of characters and values in the array buffer
+    * using **snprintf()** from [stdlib.h] library which formats and stores a series of characters and values in the array buffer
+
+
+* Handle Arrow key escape sequences and change the position of the cursor on arrow key press
