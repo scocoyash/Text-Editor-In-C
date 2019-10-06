@@ -15,7 +15,6 @@
 void die(const char *s);
 
 /*** DATA STRUCTURES ***/
-
 struct editorConfiguration {
 	int cx, cy;
 	int screencols;
@@ -37,8 +36,8 @@ enum editorKeys{
 	PAGE_UP,
 	PAGE_DOWN
 } ;
-/*** TERMINAL ***/
 
+/*** TERMINAL ***/
 struct abuf {
   char *b;
   int len;
@@ -95,9 +94,17 @@ int keyRead(){
 					case 'B' : return ARROW_DOWN;
 					case 'C' : return ARROW_RIGHT;
 					case 'D' : return ARROW_LEFT;
+					case 'H' : return HOME_KEY;
+          			case 'F' : return END_KEY;
 				}
 			}
+		}else if(seq[0] == 'O'){
+			switch (seq[1]) {
+				case 'H': return HOME_KEY;
+				case 'F': return END_KEY;
+			}
 		}
+
 		return '\x1b';
 	} else {
     	return c;
@@ -228,7 +235,6 @@ void editorKeyPress(){
 }
 
 /*** OUTPUT ***/
-
 /**
  * @brief adds '~' character at the start of each row
 */
@@ -275,7 +281,6 @@ void editorRefreshScreen() {
 }
 
 /*** INIT ***/
-
 void initEditor() {
   E.cx = E.cy = 0;
   if (getWindowSize(&E.screenrows, &E.screencols) == -1) 
