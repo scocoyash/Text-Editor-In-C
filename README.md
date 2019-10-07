@@ -1,3 +1,5 @@
+### [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/scocoyash/Text-Editor-in-C/issues)
+
 # Text-Editor-In-C
 A basic Text editor in C99 Language
 
