@@ -213,7 +213,8 @@ void editorKeyPress(){
 		case END_KEY : 
 			E.cx = E.screencols - 1; 
 			break;
-		case DEL_KEY : break; // TODO : add logic here
+		case DEL_KEY : 
+			break; // TODO : add logic here
 		
 		case PAGE_UP:
 		case PAGE_DOWN : 
@@ -241,7 +242,25 @@ void editorKeyPress(){
 void editorDrawRows(struct abuf *ab) {
   int y;
   for (y = 0; y < E.screenrows; y++) {
-	abAppend(ab, "~", 1);
+	  
+	  if (y == E.screenrows / 3) {
+      char welcome[80];
+      int welcomelen = snprintf(welcome, sizeof(welcome),
+        "Stex editor -- version %s", STEX_VERSION);
+      if (welcomelen > E.screencols) welcomelen = E.screencols;
+      int padding = (E.screencols - welcomelen) / 2;
+      if (padding) {
+        abAppend(ab, "~", 1);
+        padding--;
+      }
+      while (padding--) abAppend(ab, " ", 1);
+
+	  abAppend(ab, welcome, welcomelen);
+    } else {
+      abAppend(ab, "~", 1);
+    }
+
+	
     // write(STDOUT_FILENO, "~", 1);
 	
 	// erasing the right part of each line before drawing
