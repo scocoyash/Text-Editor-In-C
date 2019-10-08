@@ -3,6 +3,7 @@
 #include<stdio.h>
 #include<errno.h>
 #include<termios.h>
+#include<sys/types.h>
 #include<sys/ioctl.h>
 #include<unistd.h>
 #include<stdlib.h>
@@ -15,10 +16,19 @@
 void die(const char *s);
 
 /*** DATA STRUCTURES ***/
+
+// datatype for storing a row of a text-editor
+typedef struct erow {
+	int size;
+	char* chars;
+} erow;
+
 struct editorConfiguration {
 	int cx, cy;
 	int screencols;
 	int screenrows;
+	int numRows;
+	erow row;
 	/* stores original terminal attributes	*/
 	struct termios original_termios;
 };
@@ -175,6 +185,27 @@ int getWindowSize(int *rows, int *cols){
 	}
 }
 
+/*** FILE I/O ***/
+void editorFileOpen(char *filename){
+	FILE *f = fopen(filename, "r");
+	if(!f) die("fopen");
+
+	char *line = NULL;
+	size_t linecap = 0;
+	ssize_t linelen = getline(&line, &linecap, f);
+	if(linelen != -1){
+		while(linelen > 0 && (line[linelen - 1] != '\n' || 
+							  line[linelen - 1] != '\r'))
+							  linelen--;
+
+		E.row.size = linelen;
+		E.row.chars = malloc(linelen + 1);
+		memcpy(E.row.chars, line, linelen);
+		E.row.chars[linelen + 1] = '\0';
+		E.numRows = 1;
+	}
+}
+
 /*** INPUT ***/
 void editorMoveCursor(int key){
 	switch(key){
@@ -242,24 +273,31 @@ void editorKeyPress(){
 void editorDrawRows(struct abuf *ab) {
   int y;
   for (y = 0; y < E.screenrows; y++) {
-	  
-	  if (y == E.screenrows / 3) {
-      char welcome[80];
-      int welcomelen = snprintf(welcome, sizeof(welcome),
-        "Stex editor -- version %s", STEX_VERSION);
-      if (welcomelen > E.screencols) welcomelen = E.screencols;
-      int padding = (E.screencols - welcomelen) / 2;
-      if (padding) {
-        abAppend(ab, "~", 1);
-        padding--;
-      }
-      while (padding--) abAppend(ab, " ", 1);
 
-	  abAppend(ab, welcome, welcomelen);
-    } else {
-      abAppend(ab, "~", 1);
-    }
+	if(y >= E.numRows){
+		if (E.numRows == 0 && y == E.screenrows / 3) {
+			// display the text message only if no text file to read
+			char welcome[80];
+			int welcomelen = snprintf(welcome, sizeof(welcome),
+				"Stex editor -- version %s", STEX_VERSION);
+			if (welcomelen > E.screencols) welcomelen = E.screencols;
+			int padding = (E.screencols - welcomelen) / 2;
+			if (padding) {
+				abAppend(ab, "~", 1);
+				padding--;
+			}
+			while (padding--) abAppend(ab, " ", 1);
 
+			abAppend(ab, welcome, welcomelen);
+		} else {
+			abAppend(ab, "~", 1);
+		}
+	} else{
+		// display file 
+		int len = E.row.size;
+		if(len > E.screencols) len = E.screencols;
+		abAppend(ab, E.row.chars, len);
+	}
 	
     // write(STDOUT_FILENO, "~", 1);
 	
@@ -267,6 +305,7 @@ void editorDrawRows(struct abuf *ab) {
 	abAppend(ab, "\x1b[K", 4);
     if (y < E.screenrows - 1) {
 		abAppend(ab, "\r\n", 2);
+		 // TODO : terminal status bar display
       // write(STDOUT_FILENO, "\r\n", 2);
     }
   }
@@ -302,14 +341,17 @@ void editorRefreshScreen() {
 /*** INIT ***/
 void initEditor() {
   E.cx = E.cy = 0;
+  E.numRows = 0; // TODO : make this dynamic; increment as per lines
   if (getWindowSize(&E.screenrows, &E.screencols) == -1) 
   		die("getWindowSize");
 }
 
-int main(){
+int main(int argc, char *argv[]){
 	enterRawMode();
 	initEditor();
-	
+	if(argc >= 2){
+		editorFileOpen(argv[1]);
+	}
 	while (1) {
 		editorRefreshScreen();
     	editorKeyPress();
