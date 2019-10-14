@@ -110,3 +110,11 @@ Replacing all our **write()** calls with code that appends the string to a buffe
         *   [3~ - Del
         * [You can find more escape sequences here :D](http://ascii-table.com/ansi-escape-sequences.php)
 
+### Step 4 - Reading from a file
+***
+
+* To store each row values, we create a **struct erow{}** that stores the size of the row as well as the string of that row.
+
+* Next, you open a file( **FILE** ) and read it line-by-line using **fopen()** and **getline()** functions from [stdio.h] library
+
+* Strip off the newline or carriage return at the end of the line before copying it into our erow. We know each erow represents one line of text, so there’s no use storing a newline character at the end of each one.
