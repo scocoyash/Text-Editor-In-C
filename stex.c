@@ -1,3 +1,7 @@
+#define _DEFAULT_SOURCE
+#define _BSD_SOURCE
+#define _GNU_SOURCE
+
 /*** includes ***/
 #include<ctype.h>
 #include<stdio.h>
@@ -13,8 +17,6 @@
 // 0x1F - decimal 27 escape sequence
 #define CTRL_KEY(k) ((k) & 0x1F)
 
-void die(const char *s);
-
 /*** DATA STRUCTURES ***/
 
 // datatype for storing a row of a text-editor
@@ -28,7 +30,7 @@ struct editorConfiguration {
 	int screencols;
 	int screenrows;
 	int numRows;
-	erow row;
+	erow *row; // array for each row 
 	/* stores original terminal attributes	*/
 	struct termios original_termios;
 };
@@ -36,10 +38,10 @@ struct editorConfiguration {
 struct editorConfiguration E;
 
 enum editorKeys{
-	ARROW_UP = 1000,
-	ARROW_DOWN,
+	ARROW_LEFT = 1000,
 	ARROW_RIGHT,
-	ARROW_LEFT,
+	ARROW_UP,
+	ARROW_DOWN,
 	DEL_KEY,
 	HOME_KEY,
 	END_KEY,
@@ -54,6 +56,14 @@ struct abuf {
 };
 
 #define ABUF_INIT {NULL, 0}
+
+/* error logging function */
+void die(const char *s) {
+  write(STDOUT_FILENO, "\x1b[2J", 4);
+  write(STDOUT_FILENO, "\x1b[H", 3);
+  perror(s);
+  exit(1);
+}
 
 void abAppend(struct abuf *ab,const char *s, int len){
 	char *new = realloc(ab->b, ab->len + len);
@@ -121,14 +131,6 @@ int keyRead(){
   }
 }
 
-/* error logging function */
-void die(const char *s) {
-  write(STDOUT_FILENO, "\x1b[2J", 4);
-  write(STDOUT_FILENO, "\x1b[H", 3);
-  perror(s);
-  exit(1);
-}
-
 void exitRawMode(){
 	/* leave the terminal attributes as they were when exiting */
 	if(tcsetattr(STDIN_FILENO, TCSAFLUSH, &E.original_termios) == -1) die("tcsetattr");
@@ -185,6 +187,17 @@ int getWindowSize(int *rows, int *cols){
 	}
 }
 
+/*** ROW OPERATIONS ***/
+void editorAppendRow(char *s, size_t linelen){
+	E.row = realloc(E.row, sizeof(erow) * (E.numRows + 1));
+	int at = E.numRows;
+	E.row[at].size = linelen;
+	E.row[at].chars = malloc(linelen + 1);
+	memcpy(E.row[at].chars, s, linelen);
+	E.row[at].chars[linelen] = '\0';
+	E.numRows++;
+}
+
 /*** FILE I/O ***/
 void editorFileOpen(char *filename){
 	FILE *f = fopen(filename, "r");
@@ -192,18 +205,16 @@ void editorFileOpen(char *filename){
 
 	char *line = NULL;
 	size_t linecap = 0;
-	ssize_t linelen = getline(&line, &linecap, f);
-	if(linelen != -1){
-		while(linelen > 0 && (line[linelen - 1] != '\n' || 
-							  line[linelen - 1] != '\r'))
-							  linelen--;
-
-		E.row.size = linelen;
-		E.row.chars = malloc(linelen + 1);
-		memcpy(E.row.chars, line, linelen);
-		E.row.chars[linelen + 1] = '\0';
-		E.numRows = 1;
+	ssize_t linelen ;
+	while ((linelen = getline(&line, &linecap, f)) != -1) {
+		while(linelen > 0 && (line[linelen - 1] == '\n' || 
+							  line[linelen - 1] == '\r'))
+		linelen--;
+		editorAppendRow(line, linelen);
 	}
+	// release memory
+	free(line);
+	fclose(f);
 }
 
 /*** INPUT ***/
@@ -263,7 +274,6 @@ void editorKeyPress(){
 			editorMoveCursor(c);
 			break;
 	}
-	return;
 }
 
 /*** OUTPUT ***/
@@ -271,8 +281,7 @@ void editorKeyPress(){
  * @brief adds '~' character at the start of each row
 */
 void editorDrawRows(struct abuf *ab) {
-  int y;
-  for (y = 0; y < E.screenrows; y++) {
+  for (int y = 0; y < E.screenrows; y++) {
 
 	if(y >= E.numRows){
 		if (E.numRows == 0 && y == E.screenrows / 3) {
@@ -294,15 +303,15 @@ void editorDrawRows(struct abuf *ab) {
 		}
 	} else{
 		// display file 
-		int len = E.row.size;
+		int len = E.row[y].size;
 		if(len > E.screencols) len = E.screencols;
-		abAppend(ab, E.row.chars, len);
+		abAppend(ab, E.row[y].chars, len);
 	}
 	
     // write(STDOUT_FILENO, "~", 1);
 	
 	// erasing the right part of each line before drawing
-	abAppend(ab, "\x1b[K", 4);
+	abAppend(ab, "\x1b[K", 3);
     if (y < E.screenrows - 1) {
 		abAppend(ab, "\r\n", 2);
 		 // TODO : terminal status bar display
@@ -341,6 +350,7 @@ void editorRefreshScreen() {
 /*** INIT ***/
 void initEditor() {
   E.cx = E.cy = 0;
+  E.row = NULL;
   E.numRows = 0; // TODO : make this dynamic; increment as per lines
   if (getWindowSize(&E.screenrows, &E.screencols) == -1) 
   		die("getWindowSize");
