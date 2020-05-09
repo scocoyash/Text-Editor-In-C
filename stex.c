@@ -329,10 +329,11 @@ void editorRefreshScreen() {
   // hide the cursor before drawing screen 
   abAppend(&ab, "\x1b[?25l", 6);
 
+  // the below commented line clears the whole screen
   // abAppend(&ab, "\x1b[2J", 4);
   
   abAppend(&ab, "\x1b[H", 3);
-  
+  // drawing screen
   editorDrawRows(&ab);
   
   // postions the cursor at current cx, cy
