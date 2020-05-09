@@ -118,3 +118,12 @@ Replacing all our **write()** calls with code that appends the string to a buffe
 * Next, you open a file( **FILE** ) and read it line-by-line using **fopen()** and **getline()** functions from [stdio.h] library
 
 * Strip off the newline or carriage return at the end of the line before copying it into our erow. We know each erow represents one line of text, so there’s no use storing a newline character at the end of each one.
+
+### Step 5 - Adding Vertical Scroll
+***
+
+* To enable vertical scroll, we use have to keep track of current row position in the editor itself. Therefore, an editor variable rowOffset is added to configuration and initialized to 0 i.e. topmost row.
+
+* If the current cursor position int the vertical direction is above or below the visible window, we need to set rowOffset variable accoringly. This has been done in **verticalScroll()** function.
+
+* But as soon as you scroll to bottom of file, cy will no longer refer to the position onsceen. So, the correct cursor position will be (cy - rowOffset)

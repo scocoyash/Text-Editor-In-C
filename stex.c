@@ -27,10 +27,15 @@ typedef struct erow {
 
 struct editorConfiguration {
 	int cx, cy;
+	/* row of the file the user is currently scrolled */
+	int rowOffset;
+	
 	int screencols;
 	int screenrows;
+	
 	int numRows;
 	erow *row; // array for each row 
+	
 	/* stores original terminal attributes	*/
 	struct termios original_termios;
 };
@@ -225,7 +230,7 @@ void editorMoveCursor(int key){
 				E.cy--; 
 			break;
 		case ARROW_DOWN : 
-			if(E.cy != E.screenrows - 1) 
+			if(E.cy != E.numRows) 
 				E.cy++; 
 			break;
 		case ARROW_RIGHT : 
@@ -276,14 +281,27 @@ void editorKeyPress(){
 	}
 }
 
+
 /*** OUTPUT ***/
+
+void verticalScroll() {
+  if (E.cy < E.rowOffset) {
+	  // if the cursor is above the visible window
+	  E.rowOffset = E.cy;
+  }
+  if (E.cy >= E.rowOffset + E.screenrows) {
+	  // if cursor is below the bottom of visible window
+	  E.rowOffset = E.cy - E.screenrows + 1;
+  }
+}
+
 /**
  * @brief adds '~' character at the start of each row
 */
 void editorDrawRows(struct abuf *ab) {
   for (int y = 0; y < E.screenrows; y++) {
-
-	if(y >= E.numRows){
+	int filerow = y + E.rowOffset;
+	if(filerow >= E.numRows){
 		if (E.numRows == 0 && y == E.screenrows / 3) {
 			// display the text message only if no text file to read
 			char welcome[80];
@@ -303,9 +321,9 @@ void editorDrawRows(struct abuf *ab) {
 		}
 	} else{
 		// display file 
-		int len = E.row[y].size;
+		int len = E.row[filerow].size;
 		if(len > E.screencols) len = E.screencols;
-		abAppend(ab, E.row[y].chars, len);
+		abAppend(ab, E.row[filerow].chars, len);
 	}
 	
     // write(STDOUT_FILENO, "~", 1);
@@ -323,7 +341,7 @@ void editorDrawRows(struct abuf *ab) {
 void editorRefreshScreen() {
   // write(STDOUT_FILENO, "\x1b[2J", 4);
   // write(STDOUT_FILENO, "\x1b[H", 3);
-
+  verticalScroll();
   struct abuf ab = ABUF_INIT;
   
   // hide the cursor before drawing screen 
@@ -352,6 +370,7 @@ void editorRefreshScreen() {
 void initEditor() {
   E.cx = E.cy = 0;
   E.row = NULL;
+  E.rowOffset = 0;
   E.numRows = 0; // TODO : make this dynamic; increment as per lines
   if (getWindowSize(&E.screenrows, &E.screencols) == -1) 
   		die("getWindowSize");
